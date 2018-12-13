@@ -1,6 +1,6 @@
 {
   "name": "little-api",
-  "description": "A simple JSON-over-HTTP RPC server and client",
+  "description": "A simple JSON-over-HTTP/WS RPC server and client",
   "keywords": [
     "json",
     "rest",
@@ -9,16 +9,20 @@
     "client",
     "rpc",
     "http",
-    "express"
+    "express",
+    "websocket",
+    "socket",
+    "stream"
   ],
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "debug": "^4.1.0",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "ws": "^6.1.2"
   },
   "devDependencies": {
     "concurrently": "^4.1.0",

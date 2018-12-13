@@ -1,6 +1,6 @@
 # little-api
 
-`little-api` is a wrapper around express and XHRs that gives you a nice JSON-over-HTTP RPC server and client with little configuration.
+`little-api` is a wrapper around express, XHRs, and WebSockets that gives you a nice JSON-over-HTTP/WS RPC server and client with little configuration.
 
 ## Installation
 
@@ -8,7 +8,7 @@
 npm install --save little-api
 ```
 
-## Usage
+## HTTP Usage
 
 On the server:
 
@@ -18,7 +18,8 @@ const createServer = require("little-api/server");
 const server = createServer({
   methods: {
     // Fill this object with functions that do whatever you want.
-    // They can return a JSON-serializable value or a Promise that resolves to one.
+    // They will be wrapped with an HTTP API that makes them available to clients.
+    // These functions can return a JSON-serializable value or a Promise that resolves to one.
     uppercase(...words) {
       return words.map((word) => word.toUpperCase());
     },
@@ -28,7 +29,7 @@ const server = createServer({
   },
 });
 
-// `server` is an express server.
+// `server` is a node net.Server.
 server.listen(8080, () => {
   console.log("Server is listening on port 8080");
 });
@@ -61,38 +62,94 @@ const results = api.uppercase.sync("hello", "world");
 console.log(results); // ["HELLO", "WORLD"]
 ```
 
+## WebSocket Usage
+
+You can also use little-api for your websocket server.
+
+On the server:
+
+```js
+const createServer = require("little-api/server");
+
+const server = createServer({
+  // Use the socketMethods key instead of methods. You can use both socketMethods and methods together if you want to.
+  socketMethods: {
+    // Fill this object with functions that handle incoming socket connections.
+    // Each will receive a socket object and any args that were passed to the function clientside.
+    fancyEcho(socket, repeatTimes, uppercase = false) {
+      socket.on("message", (message) => {
+        message = message.repeat(repeatTimes);
+        if (uppercase) {
+          message = message.toUpperCase();
+        }
+        socket.send(message);
+      });
+    },
+  },
+});
+
+// `server` works the same as usual.
+server.listen(8080, () => {
+  console.log("Server is listening on port 8080");
+});
+```
+
+On the client:
+
+```js
+const createClient = require("little-api/client");
+
+const api = createClient({
+  url: "http://localhost:8080",
+  socketMethods: ["fancyEcho"],
+});
+
+// api has properties for each socket method on it in addition to any normal methods you specify:
+console.log(api);
+// {
+//   fancyEcho: function fancyEcho() { ... }
+// }
+
+// calling a function associated with a socket method will return a websocket instance:
+const websocket = api.fancyEcho(/* repeatTimes */ 3, /* uppercase */ true);
+websocket.addEventListener("message", (event) => {
+  console.log(event.data);
+});
+websocket.send("hello"); // logs HELLOHELLOHELLO
+websocket.send("world"); // logs WORLDWORLDWORLD
+```
+
 ## Notes/limitations
 
 - JSON is used as the transport format, so the arguments passed into client functions must be JSON-serializable, and the return/resolve values from the server must be JSON-serializable.
-- The client relies on the globals `XMLHttpRequest` and `Promise`.
+- The client relies on the globals `XMLHttpRequest`, `WebSocket`, `btoa`, and `Promise`.
 
 ## API
 
 ### `createServer(serverConfig: Object) => Express$App`
 
-The `createServer` function comes from the module `"little-api/server"`. It returns an express application that you can either call `listen` on or mount somewhere in a larger express app.
+The `createServer` function comes from the module `"little-api/server"`. It returns a node net.Server that you can call `listen` on.
 
-`serverConfig` is an Object that must have at least these keys:
+`serverConfig` is an Object that may have any of these keys:
 
 - `methods` - An Object of functions that should be exposed as API methods to the client.
-
-And may optionally also have these keys:
-
+- `socketMethods` - An Object of functions that should be run when a websocket client connects. Each receives a `socket` object and the args that were passed clientside.
 - `requestSizeLimit` - The maximum permitted request size. Defaults to `"1GB"`.
 - `noCors` - Set to true disable CORS. It's enabled by default.
 - `corsOptions` - Options to pass to the [cors package](https://www.npmjs.com/package/cors).
 
 ### `createClient(clientConfig: Object) => Object`
 
-The `createClient` function comes from the module `"little-api/client"`. It returns an Object whose entries are functions cooresponding to the methods on the server. Each function has a property called `sync` which is a function that use a Synchronous XHR instead of an async one.
+The `createClient` function comes from the module `"little-api/client"`. It returns an Object whose entries are functions cooresponding to the methods on the server. Each non-socket-method function has a property called `sync` which is a function that use a Synchronous XHR instead of an async one.
 
-`clientConfig` is an Object that must have at least these keys:
+`clientConfig` is an Object that must have at least this keys:
 
 - `url` - The URL to the server, eg. `"http://localhost:8080"`
-- `methods` - An Array of strings, containing the names of all the methods available on the server.
 
 And may optionally also have these keys:
 
+- `methods` - An Array of strings, containing the names of all the methods available on the server.
+- `socketMethods` - An Array of strings, containing the names of all the socket methods available on the server.
 - `timeout` - The timeout in milliseconds to set on the XHRs used to communicate with the server. Defaults to 30 seconds; set to `0` for no timeout.
 
 ## License

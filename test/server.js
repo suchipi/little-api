@@ -17,6 +17,21 @@ const server = createServer({
       return Promise.reject(new Error("nope!!!"));
     },
   },
+  socketMethods: {
+    echoSocket(socket) {
+      socket.on("message", (message) => {
+        socket.send(message);
+      });
+    },
+    uppercaseSocket(socket, repeatTimes = 1) {
+      socket.on("message", (message) => {
+        socket.send(message.toUpperCase().repeat(repeatTimes));
+      });
+    },
+    errorSocket(socket, message) {
+      throw new Error(message);
+    },
+  },
 });
 
 // server is an express server.
