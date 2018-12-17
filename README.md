@@ -142,7 +142,7 @@ The `createServer` function comes from the module `"little-api/server"`. It retu
 
 The `createClient` function comes from the module `"little-api/client"`. It returns an Object whose entries are functions cooresponding to the methods on the server. Each non-socket-method function has a property called `sync` which is a function that use a Synchronous XHR instead of an async one.
 
-`clientConfig` is an Object that must have at least this keys:
+`clientConfig` is an Object that must have at least this key:
 
 - `url` - The URL to the server, eg. `"http://localhost:8080"`
 
