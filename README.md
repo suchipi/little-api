@@ -126,7 +126,7 @@ websocket.send("world"); // logs WORLDWORLDWORLD
 
 ## API
 
-### `createServer(serverConfig: Object) => Express$App`
+### `createServer(serverConfig: Object) => net.Server`
 
 The `createServer` function comes from the module `"little-api/server"`. It returns a node net.Server that you can call `listen` on.
 
