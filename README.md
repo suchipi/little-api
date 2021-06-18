@@ -137,6 +137,7 @@ The `createServer` function comes from the module `"little-api/server"`. It retu
 - `requestSizeLimit` - The maximum permitted request size. Defaults to `"1GB"`.
 - `noCors` - Set to true disable CORS. It's enabled by default.
 - `corsOptions` - Options to pass to the [cors package](https://www.npmjs.com/package/cors).
+- `withApp` - A function that, if present, will be called with the express app right before it is passed to `http.createServer`. You can use this to add your own method handlers or middleware. Note that for the functions defined in `methods` to work, the `POST /` handler should be left alone.
 
 ### `createClient(clientConfig: Object) => Object`
 

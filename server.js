@@ -97,6 +97,10 @@ module.exports = function createServer(config) {
     }
   });
 
+  if (config.withApp) {
+    config.withApp(app);
+  }
+
   var server = http.createServer(app);
   var wsServer = new WebSocket.Server({ server: server });
 
